@@ -27,7 +27,7 @@ recomputed from train counts (not averaged percentages) and checked by a second 
 **Reproduction** (terminal of the Onyxia PySpark service):
 
 ```bash
-git clone <REPO_URL> && cd bigdata_project        # TODO: repository URL
+git clone https://github.com/libama04/bigdata_project.git && cd bigdata_project
 pip install -r src/requirements.txt
 export S3_BUCKET=<your-onyxia-bucket>             # AWS_* variables are already set by Onyxia
 ./src/run_all.sh                                  # runs steps 1 to 5 in order
