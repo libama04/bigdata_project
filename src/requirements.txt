@@ -1,0 +1,5 @@
+pyspark>=3.5
+duckdb>=1.0
+pandas>=2.0
+pyarrow>=14
+s3fs>=2024.2

@@ -1,0 +1,61 @@
+# Runs the independent DuckDB verification (src/04_verify_duckdb.py) in its own pod,
+# outside the service that ran Spark. Prerequisites (from a terminal inside Onyxia):
+#
+#   kubectl create secret generic tgv-s3 \
+#     --from-literal=AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+#     --from-literal=AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+#     --from-literal=AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
+#     --from-literal=AWS_S3_ENDPOINT="$AWS_S3_ENDPOINT" \
+#     --from-literal=S3_BUCKET="$S3_BUCKET"
+#   kubectl create configmap tgv-src \
+#     --from-file=src/common.py --from-file=src/04_verify_duckdb.py --from-file=src/sql/
+#   kubectl apply -f k8s/verify-job.yaml
+#   kubectl logs -f job/tgv-verify
+#
+# Restart: kubectl delete job tgv-verify && kubectl apply -f k8s/verify-job.yaml
+# (Onyxia S3 tokens are temporary: recreate the secret if the job gets "ExpiredToken".)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tgv-verify
+  labels:
+    app: bigdata-project
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app: bigdata-project
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: verify
+          image: python:3.12-slim
+          command: ["sh", "-c"]
+          args:
+            - pip install --quiet --no-cache-dir "duckdb>=1.0" "s3fs>=2024.2" &&
+              python /app/04_verify_duckdb.py
+          envFrom:
+            - secretRef:
+                name: tgv-s3
+          env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            requests: {cpu: 250m, memory: 512Mi}
+            limits: {cpu: "1", memory: 1Gi}
+          volumeMounts:
+            - name: src
+              mountPath: /app
+      volumes:
+        - name: src
+          configMap:
+            name: tgv-src
+            items:
+              - {key: common.py, path: common.py}
+              - {key: 04_verify_duckdb.py, path: 04_verify_duckdb.py}
+              - {key: yearly_late_rate.sql, path: sql/yearly_late_rate.sql}
+              - {key: route_late_rate.sql, path: sql/route_late_rate.sql}
