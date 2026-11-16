@@ -1,6 +1,6 @@
 # Big Data project - TGV punctuality by route (2018-2026)
 
-**Authors:** LIBAMA David, `LASTNAME Firstname` <!-- TODO: second team member -->
+**Authors:** LIBAMA David, CATTIN QUEST Julian
 
 **Prerequisites:** an Onyxia account with a personal S3 bucket; a *Jupyter-PySpark* or
 *VSCode-PySpark* service (Python >= 3.10, Spark >= 3.5, Java, S3 variables `AWS_*` pre-set);
